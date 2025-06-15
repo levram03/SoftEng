@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>House Loan Approval Prediction by KPRGENIE</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/exploration.css">
+  <link rel="stylesheet" href="css/prediction.css">
+  <link rel="stylesheet" href="css/login.css">
+  <link rel="stylesheet" href="css/rating-page.css"> 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Gaya CSS inline Anda dari sebelumnya bisa tetap di sini atau dipindahkan ke file CSS terpisah */
+    .search-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .search-container input {
+      flex-grow: 1;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+    }
+    .search-container button {
+      padding: 10px 15px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+    }
+    .place-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .place-card {
+      background-color: var(--background-color);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 15px;
+      box-shadow: var(--shadow-sm);
+    }
+    .place-card h3 {
+      margin-top: 0;
+      color: var(--text-color-dark);
+    }
+    .place-card p {
+      font-size: 0.9em;
+      color: var(--text-color-light);
+      margin-bottom: 10px;
+    }
+    .place-card .current-rating {
+        font-weight: bold;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+    }
+    .place-card .action-buttons { 
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .place-card .action-buttons button {
+      background-color: var(--secondary-color);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+      text-align: center;
+    }
+    .place-card .action-buttons button:hover {
+      background-color: var(--secondary-color-dark);
+    }
+    .place-card .action-buttons button i {
+        margin-right: 5px;
+    }
+
+    /* Gaya untuk resultContainer (bisa juga di prediction.css) */
+    .result-card, .importance-card {
+        background-color: var(--card-bg, #fff);
+        padding: 20px;
+        border-radius: var(--border-radius, 8px);
+        box-shadow: var(--shadow-sm, 0 2px 4px rgba(0,0,0,0.05));
+        margin-bottom: 20px;
+    }
+    .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color, #eee);
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+    .result-header h2 {
+        margin: 0;
+        font-size: 1.5em;
+        color: var(--text-color-dark, #333);
+    }
+    .close-result {
+        background: none;
+        border: none;
+        font-size: 1.5em;
+        cursor: pointer;
+        color: var(--text-color-light, #777);
+    }
+    .prediction-status .loader { /* Contoh sederhana loader */
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid var(--primary-color, #3498db);
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 10px auto;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .prediction-status p {
+        text-align: center;
+        font-style: italic;
+        color: var(--text-color-light, #555);
+    }
+    .result-icon { margin-bottom: 10px; text-align: center; }
+    .result-icon i { font-size: 3em; } /* Ukuran ikon hasil */
+    .result-icon.approved i { color: var(--success-color, green); }
+    .result-icon.rejected i { color: var(--error-color, red); }
+    .result-text { text-align: center; margin-top: 0; margin-bottom: 5px; font-size: 1.8em; color: var(--text-color-dark, #333); }
+    .result-description { text-align: center; margin-top: 0; color: var(--text-color-light, #555); }
+    .importance-card h2 { text-align: center; margin-bottom: 15px; font-size: 1.5em; color: var(--text-color-dark, #333); }
+    .chart-container { position: relative; height:300px; width:100%; max-width: 600px; margin: 0 auto; } /* Batasi lebar chart */
+    .importance-note { font-size: 0.85em; text-align: center; margin-top: 15px; color: var(--text-color-light, #666); }
+    .importance-note i { margin-right: 5px; color: var(--primary-color, #3498db); }
+
+  </style>
+</head>
+<body>
+  <div id="loginPage" class="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="logo">
+          <img src="logo.jpg" width="75" height="auto">
+        </div>
+        <h1>Welcome to KPRGENIE</h1>
+        <p>Sign in to access loan prediction tools</p>
+      </div>
+      
+      <div id="loginError" class="error-message hidden">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span>Invalid email or password. Please try again.</span>
+      </div>
+      
+      <form id="loginForm" class="login-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required placeholder="Enter your email">
+        </div>
+        
+        <div class="form-group">
+          <div class="password-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required placeholder="Enter your password">
+            <button type="button" class="password-toggle" id="passwordToggle">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="remember-forgot">
+          <label class="remember-me">
+            <input type="checkbox" id="rememberMe" name="rememberMe">
+            <span>Remember me</span>
+          </label>
+          <a href="#" class="forgot-password">Forgot password?</a>
+        </div>
+        
+        <button type="submit" class="login-btn">Sign In</button>
+      </form>
+      
+      <div class="login-divider">or</div>
+      
+      <p class="signup-prompt">
+        Don't have an account? <a href="#" class="signup-link">Sign up</a>
+      </p>
+    </div>
+  </div>
+
+  <div id="appContainer" class="hidden">
+    <div class="app-container">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="logo">
+            
+        <img src="logo.jpg" width="150" height="auto">
+          </div>
+          <button class="mobile-toggle" id="sidebarToggle">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+        </div>
+        <nav class="sidebar-nav">
+          <ul>
+            <li><a href="#" class="nav-link active" data-page="home"><i class="fa-solid fa-house"></i> Home</a></li>
+            <li><a href="#" class="nav-link" data-page="exploration"><i class="fa-solid fa-chart-line"></i> Data Exploration</a></li>
+            <li><a href="#" class="nav-link" data-page="prediction"><i class="fa-solid fa-calculator"></i> Loan Prediction</a></li>
+            <li><a href="#" class="nav-link" data-page="community"><i class="fa-solid fa-users"></i> Community Forum</a></li>
+            <li><a href="#" class="nav-link" data-page="ratings"><i class="fa-solid fa-star"></i> Place Ratings</a></li>
+          </ul>
+        </nav>
+        <div class="sidebar-footer">
+          <button id="logoutBtn" class="btn secondary">
+            <i class="fa-solid fa-sign-out-alt"></i> Logout
+          </button>
+          <p>© 2025 KPRGENIE</p>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <section id="home" class="page active">
+          <div class="page-header">
+            <h1><i class="fa-solid fa-building-columns"></i> House Loan Approval Prediction by KPRGENIE</h1>
+          </div>
+          <div class="content-container">
+            <div class="card-grid">
+              <div class="info-card">
+                <h2>About the App</h2>
+                <p>This app predicts your eligibility to apply for a house loan based on various factors including:</p>
+                <ul class="feature-list">
+                  <li><i class="fa-solid fa-user"></i> <strong>Gender:</strong> Female | Male</li>
+                  <li><i class="fa-solid fa-users"></i> <strong>Dependents:</strong> 0, 1, 2, 3+</li>
+                  <li><i class="fa-solid fa-graduation-cap"></i> <strong>Education:</strong> Graduate | Not Graduate</li>
+                  <li><i class="fa-solid fa-briefcase"></i> <strong>Self Employed:</strong> Yes | No</li>
+                  <li><i class="fa-solid fa-indian-rupee-sign"></i> <strong>Applicant Income:</strong> (in Indian Rupee)</li>
+                  <li><i class="fa-solid fa-indian-rupee-sign"></i> <strong>Coapplicant Income:</strong> (in Indian Rupee)</li>
+                  <li><i class="fa-solid fa-money-bill-wave"></i> <strong>Loan Amount:</strong> (in Indian Rupee)</li>
+                  <li><i class="fa-solid fa-calendar-days"></i> <strong>Loan Amount Term:</strong> (Numerical month)</li>
+                  <li><i class="fa-solid fa-credit-card"></i> <strong>Credit History:</strong> 0.0 | 1.0</li>
+                  <li><i class="fa-solid fa-house"></i> <strong>Property Area:</strong> Urban, Semiurban, Rural</li>
+                </ul>
+                <p class="note">This app uses a Random Forest machine learning model for predictions.</p>
+              </div>
+              <div class="image-card">
+                <img src="https://images.pexels.com/photos/2098621/pexels-photo-2098621.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="House with loan approval">
+              </div>
+            </div>
+            
+            <div class="usage-card">
+              <h2>How to use the App</h2>
+              <div class="steps-container">
+                <div class="step">
+                  <div class="step-icon">
+                    <i class="fa-solid fa-chart-line"></i>
+                  </div>
+                  <div class="step-content">
+                    <h3>Data Exploration</h3>
+                    <p>View and analyze the datasets used for model training.</p>
+                  </div>
+                </div>
+                <div class="step">
+                  <div class="step-icon">
+                    <i class="fa-solid fa-calculator"></i>
+                  </div>
+                  <div class="step-content">
+                    <h3>Loan Prediction</h3>
+                    <p>Input your data and get House Loan Prediction results.</p>
+                  </div>
+                </div>
+              </div>
+              <p class="cta">Use the sidebar on the left to navigate between pages.</p>
+              <button class="btn primary" id="startPrediction">Start Prediction Now</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="exploration" class="page">
+          <div class="page-header">
+            <h1><i class="fa-solid fa-chart-line"></i> Data Exploration</h1>
+          </div>
+          <div class="content-container">
+            <div class="data-card">
+              <div class="card-header">
+                <h2>Home Loan Approval Dataset</h2>
+                <div class="controls">
+                  <input type="text" placeholder="Search data..." id="dataSearch">
+                  <select id="entriesCount">
+                    <option value="10">10 entries</option>
+                    <option value="25">25 entries</option>
+                    <option value="50">50 entries</option>
+                  </select>
+                </div>
+              </div>
+              <div class="table-container">
+                <table id="dataTable">
+                  <thead>
+                    <tr>
+                      <th>Loan_ID</th>
+                      <th>Gender</th>
+                      <th>Married</th>
+                      <th>Dependents</th>
+                      <th>Education</th>
+                      <th>Self_Employed</th>
+                      <th>ApplicantIncome</th>
+                      <th>CoapplicantIncome</th>
+                      <th>LoanAmount</th>
+                      <th>Loan_Amount_Term</th>
+                      <th>Credit_History</th>
+                      <th>Property_Area</th>
+                      <th>Loan_Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>LP001002</td><td>Male</td><td>No</td><td>0</td><td>Graduate</td><td>No</td><td>5849</td><td>0</td><td>128</td><td>360</td><td>1</td><td>Urban</td><td>Y</td></tr>
+                    <tr><td>LP001003</td><td>Male</td><td>Yes</td><td>1</td><td>Graduate</td><td>No</td><td>4583</td><td>1508</td><td>128</td><td>360</td><td>1</td><td>Rural</td><td>N</td></tr>
+                    <tr><td>LP001005</td><td>Male</td><td>Yes</td><td>0</td><td>Graduate</td><td>Yes</td><td>3000</td><td>0</td><td>66</td><td>360</td><td>1</td><td>Urban</td><td>Y</td></tr>
+                    <tr><td>LP001006</td><td>Male</td><td>Yes</td><td>0</td><td>Not Graduate</td><td>No</td><td>2583</td><td>2358</td><td>120</td><td>360</td><td>1</td><td>Urban</td><td>Y</td></tr>
+                    <tr><td>LP001008</td><td>Male</td><td>No</td><td>0</td><td>Graduate</td><td>No</td><td>6000</td><td>0</td><td>141</td><td>360</td><td>1</td><td>Urban</td><td>Y</td></tr>
+                  </tbody>
+                </table>
+                <div class="pagination">
+                  <button class="btn-page" disabled>Previous</button>
+                  <span class="page-info">Page 1 of 5</span>
+                  <button class="btn-page">Next</button>
+                </div>
+              </div>
+            </div>
+            <div class="stats-card">
+              <h2>Descriptive Statistics</h2>
+              <div class="tabs">
+                <button class="tab-btn active" data-tab="summary">Summary</button>
+                <button class="tab-btn" data-tab="numerical">Numerical</button>
+                <button class="tab-btn" data-tab="categorical">Categorical</button>
+              </div>
+              <div class="tab-content active" id="summary">
+                <table class="stats-table">
+                  <thead><tr><th>Metric</th><th>ApplicantIncome</th><th>CoapplicantIncome</th><th>LoanAmount</th><th>Loan_Amount_Term</th></tr></thead>
+                  <tbody>
+                    <tr><td>count</td><td>614</td><td>614</td><td>592</td><td>600</td></tr>
+                    <tr><td>mean</td><td>5403.46</td><td>1621.25</td><td>146.41</td><td>342.00</td></tr>
+                    <tr><td>std</td><td>6109.04</td><td>2926.25</td><td>85.59</td><td>65.12</td></tr>
+                    <tr><td>min</td><td>150</td><td>0.00</td><td>9.00</td><td>12.00</td></tr>
+                    <tr><td>25%</td><td>2877.50</td><td>0.00</td><td>100.00</td><td>360.00</td></tr>
+                    <tr><td>50%</td><td>3812.50</td><td>1188.50</td><td>128.00</td><td>360.00</td></tr>
+                    <tr><td>75%</td><td>5795.00</td><td>2297.25</td><td>168.00</td><td>360.00</td></tr>
+                    <tr><td>max</td><td>81000.00</td><td>41667.00</td><td>700.00</td><td>480.00</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="tab-content" id="numerical"><div class="chart-controls"><label for="numFeature">Select Feature:</label><select id="numFeature"><option value="ApplicantIncome">Applicant Income</option><option value="CoapplicantIncome">Coapplicant Income</option><option value="LoanAmount">Loan Amount</option></select></div><div class="chart-container"><canvas id="distributionChart"></canvas></div></div>
+              <div class="tab-content" id="categorical"><div class="chart-controls"><label for="catFeature">Select Feature:</label><select id="catFeature"><option value="Gender">Gender</option><option value="Married">Married</option><option value="Dependents">Dependents</option><option value="Education">Education</option><option value="Self_Employed">Self Employed</option><option value="Property_Area">Property Area</option><option value="Credit_History">Credit History</option></select></div><div class="chart-container"><canvas id="categoryChart"></canvas></div></div>
+            </div>
+            <div class="outlier-card"><h2>Outlier Analysis</h2><div class="chart-container"><canvas id="boxplotChart"></canvas></div></div>
+          </div>
+        </section>
+
+        <section id="prediction" class="page">
+          <div class="page-header">
+            <h1><i class="fa-solid fa-calculator"></i> Loan Status Prediction</h1>
+          </div>
+          <div class="content-container">
+            <form id="predictionForm" class="prediction-form">
+                <div class="form-columns">
+                <div class="form-column">
+                  <div class="form-section">
+                    <h2>Personal Information</h2>
+                    <div class="form-group"><label for="gender">Gender</label><select id="gender" name="gender" required><option value="">Select gender</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+                    <div class="form-group"><label for="married">Marital Status</label><select id="married" name="married" required><option value="">Select status</option><option value="Yes">Married</option><option value="No">Not Married</option></select></div>
+                    <div class="form-group"><label for="dependents">Dependents</label><select id="dependents" name="dependents" required><option value="">Select dependents</option><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3+">3+</option></select></div>
+                    <div class="form-group"><label for="education">Education</label><select id="education" name="education" required><option value="">Select education</option><option value="Graduate">Graduate</option><option value="Not Graduate">Not Graduate</option></select></div>
+                    <div class="form-group"><label for="selfEmployed">Self Employed</label><select id="selfEmployed" name="selfEmployed" required><option value="">Select option</option><option value="Yes">Yes</option><option value="No">No</option></select></div>
+                  </div>
+                  <div class="form-section">
+                    <h2>Property Information</h2>
+                    <div class="form-group"><label for="propertyArea">Property Area</label><select id="propertyArea" name="propertyArea" required><option value="">Select area</option><option value="Rural">Rural</option><option value="Semiurban">Semiurban</option><option value="Urban">Urban</option></select></div>
+                    <div class="form-group"><label for="creditHistory">Credit History</label><select id="creditHistory" name="creditHistory" required><option value="">Select credit history</option><option value="1.0">1.0 (Good)</option><option value="0.0">0.0 (Bad)</option></select></div>
+                  </div>
+                </div>
+                <div class="form-column">
+                  <div class="form-section">
+                    <h2>Financial Information</h2>
+                    <div class="form-group"><label for="applicantIncome">Applicant Income (₹)</label><input type="number" id="applicantIncome" name="applicantIncome" min="0" step="100" value="5000" required></div>
+                    <div class="form-group"><label for="coapplicantIncome">Coapplicant Income (₹)</label><input type="number" id="coapplicantIncome" name="coapplicantIncome" min="0" step="100" value="1000" required></div>
+                    <div class="form-group"><label for="loanAmount">Loan Amount (₹ thousands)</label><input type="number" id="loanAmount" name="loanAmount" min="9" step="1" value="100" required></div>
+                    <div class="form-group"><label for="loanTerm">Loan Amount Term (months)</label><input type="number" id="loanTerm" name="loanTerm" min="12" step="12" value="360" required><div class="range-markers"><span>12</span><span>180</span><span>360</span><span>480</span></div></div>
+                  </div>
+                  <div class="form-submit">
+                    <button type="submit" class="btn primary">Predict Loan Status</button>
+                    <button type="reset" class="btn secondary">Reset Form</button>
+                  </div>
+                </div>
+              </div>
+            </form>
+
+            <div id="resultContainer" class="result-container hidden">
+              <div class="result-card">
+                <div class="result-header">
+                  <h2>Hasil Prediksi</h2>
+                  <button type="button" class="close-result" aria-label="Close result">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+                <div class="result-content">
+                  <div class="prediction-status"> <div class="loader"></div> <p>Memproses prediksi Anda...</p> 
+                  </div>
+                  <div class="prediction-result hidden"> <div class="result-icon approved hidden">
+                      <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="result-icon rejected hidden">
+                      <i class="fa-solid fa-circle-xmark"></i>
+                    </div>
+                    <h3 class="result-text">
+                      Status Pinjaman: <span id="approvalStatus"></span>
+                    </h3>
+                    <p class="result-description">
+                      Berdasarkan informasi yang diberikan, <span id="approvalDescription"></span>.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="importance-card">
+                <h2>Faktor Penentu Prediksi</h2>
+                <div class="chart-container">
+                  <canvas id="importanceChart"></canvas>
+                </div>
+                <div class="importance-note">
+                  <p><i class="fa-solid fa-info-circle"></i> Grafik di atas menunjukkan seberapa besar pengaruh setiap faktor terhadap keputusan prediksi.</p>
+                </div>
+              </div>
+            </div>
+            </div>
+        </section>
+
+        <section id="place-rating-detail" class="page">
+          <div class="page-header">
+            <h1><i class="fa-solid fa-star-half-alt"></i> Detail Rating Tempat</h1>
+            <button class="btn secondary" id="backToSearchBtn" style="margin-left: auto; font-size: 0.9em; padding: 8px 15px;">
+                <i class="fa-solid fa-arrow-left"></i> Kembali
+            </button>
+          </div>
+          <div class="content-container">
+            <div class="rating-card-detail">
+              <div class="card-header">
+                <h2 id="ratingPlaceName">Nama Tempat yang Dinilai</h2>
+              </div>
+              <div class="rating-detail-content">
+                <p>Berikan penilaian Anda untuk tempat ini berdasarkan aspek-aspek berikut (1 bintang terendah, 5 bintang tertinggi):</p>
+                <form id="detailedRatingForm">
+                  <input type="hidden" id="detailedRatingPlaceId" name="placeId">
+                  <div class="rating-aspect"><label>Kebersihan</label><div class="stars" data-aspect="kebersihan"><i class="fa-regular fa-star" data-value="1"></i><i class="fa-regular fa-star" data-value="2"></i><i class="fa-regular fa-star" data-value="3"></i><i class="fa-regular fa-star" data-value="4"></i><i class="fa-regular fa-star" data-value="5"></i></div><input type="hidden" name="ratingKebersihan" id="inputKebersihan"></div>
+                  <div class="rating-aspect"><label>Pelayanan</label><div class="stars" data-aspect="pelayanan"><i class="fa-regular fa-star" data-value="1"></i><i class="fa-regular fa-star" data-value="2"></i><i class="fa-regular fa-star" data-value="3"></i><i class="fa-regular fa-star" data-value="4"></i><i class="fa-regular fa-star" data-value="5"></i></div><input type="hidden" name="ratingPelayanan" id="inputPelayanan"></div>
+                  <div class="rating-aspect"><label>Kualitas (Barang/Layanan)</label><div class="stars" data-aspect="kualitas"><i class="fa-regular fa-star" data-value="1"></i><i class="fa-regular fa-star" data-value="2"></i><i class="fa-regular fa-star" data-value="3"></i><i class="fa-regular fa-star" data-value="4"></i><i class="fa-regular fa-star" data-value="5"></i></div><input type="hidden" name="ratingKualitas" id="inputKualitas"></div>
+                  <div class="rating-aspect"><label>Harga (Kesesuaian dengan Kualitas)</label><div class="stars" data-aspect="harga"><i class="fa-regular fa-star" data-value="1"></i><i class="fa-regular fa-star" data-value="2"></i><i class="fa-regular fa-star" data-value="3"></i><i class="fa-regular fa-star" data-value="4"></i><i class="fa-regular fa-star" data-value="5"></i></div><input type="hidden" name="ratingHarga" id="inputHarga"></div>
+                  <div class="rating-aspect"><label>Aksesibilitas (Kemudahan Mencapai Lokasi)</label><div class="stars" data-aspect="aksesibilitas"><i class="fa-regular fa-star" data-value="1"></i><i class="fa-regular fa-star" data-value="2"></i><i class="fa-regular fa-star" data-value="3"></i><i class="fa-regular fa-star" data-value="4"></i><i class="fa-regular fa-star" data-value="5"></i></div><input type="hidden" name="ratingAksesibilitas" id="inputAksesibilitas"></div>
+                  <div class="rating-aspect"><label>Suasana</label><div class="stars" data-aspect="suasana"><i class="fa-regular fa-star" data-value="1"></i><i class="fa-regular fa-star" data-value="2"></i><i class="fa-regular fa-star" data-value="3"></i><i class="fa-regular fa-star" data-value="4"></i><i class="fa-regular fa-star" data-value="5"></i></div><input type="hidden" name="ratingSuasana" id="inputSuasana"></div>
+                  <div class="form-group"><label for="ratingComments">Ulasan Tambahan (Opsional)</label><textarea id="ratingComments" name="ratingComments" rows="4" placeholder="Bagikan pengalaman Anda lebih detail..."></textarea></div>
+                  <div class="form-submit"><button type="submit" class="btn primary"><i class="fa-solid fa-paper-plane"></i> Kirim Rating</button><button type="reset" class="btn outline" id="resetRatingBtn"><i class="fa-solid fa-undo"></i> Reset</button></div>
+                </form>
+                <div id="ratingSubmissionStatus" class="hidden" style="margin-top: 20px; padding: 15px; border-radius: var(--border-radius); background-color: var(--success-bg); color: var(--success-text);"><p><i class="fa-solid fa-circle-check"></i> Terima kasih! Rating Anda telah berhasil dikirim (simulasi).</p></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="community" class="page">
+          <div class="page-header"><h1><i class="fa-solid fa-users"></i> Community Forum</h1></div>
+          <div class="content-container">
+            <div class="forum-container">
+              <div class="forum-post-form">
+                <h2>Create a New Post</h2>
+                <form id="postForm">
+                  <div class="form-group"><label for="postTitle">Title</label><input type="text" id="postTitle" name="postTitle" required placeholder="What's your question or topic?"></div>
+                  <div class="form-group"><label for="postContent">Content</label><textarea id="postContent" name="postContent" rows="4" required placeholder="Share your thoughts..."></textarea></div>
+                  <div class="form-group"><label for="postTags">Tags (comma separated)</label><input type="text" id="postTags" name="postTags" placeholder="loan, property, advice"></div>
+                  <button type="submit" class="btn primary">Post to Community</button>
+                </form>
+              </div>
+              <div class="forum-posts">
+                <h2>Recent Discussions</h2>
+                <div class="posts-filter"><input type="text" placeholder="Search discussions..." id="forumSearch"><select id="forumFilter"><option value="all">All Topics</option><option value="loan">Loan Advice</option><option value="property">Property</option><option value="rating">Place Ratings</option></select></div>
+                <div id="postsList" class="posts-list"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <section id="ratings" class="page">
+          <div class="page-header"><h1><i class="fa-solid fa-star"></i> Place Ratings</h1><button class="btn primary" id="newRatingBtn"><i class="fa-solid fa-plus"></i> Add New Rating</button></div>
+          <div class="content-container">
+            <div class="ratings-container">
+              <div class="ratings-filter"><input type="text" placeholder="Search places..." id="ratingsSearch"><select id="ratingsCategory"><option value="all">All Categories</option><option value="school">Schools</option><option value="hospital">Hospitals</option><option value="market">Markets</option><option value="restaurant">Restaurants</option></select><select id="ratingsSort"><option value="newest">Newest First</option><option value="highest">Highest Rated</option><option value="lowest">Lowest Rated</option></select></div>
+              <div id="ratingsList" class="ratings-list"></div>
+            </div>
+          </div>
+        </section>
+      </main> 
+    </div> 
+  </div> 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/prediction.js"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_Maps_API_KEY&libraries=places&callback=initMap"></script>
+  <script src="js/nearbyPlaces.js"></script>
+  </body>
+</html>
